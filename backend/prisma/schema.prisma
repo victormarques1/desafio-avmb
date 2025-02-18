@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" 
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @default(uuid())
+  name     String
+  email    String   @unique
+  password String
+  role     Role     @default(USER)
+  status   Status   @default(PENDING)
+  accesses Access[]
+  
+  @@map("users") 
+}
+
+model Resource {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  accesses    Access[]
+  
+  @@map("resources")
+}
+
+model Access {
+  id             String   @id @default(uuid())
+  userId         String
+  resourceId     String
+  expirationDate DateTime
+  status         AccessStatus @default(ACTIVE)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@map("accesses")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AccessStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
